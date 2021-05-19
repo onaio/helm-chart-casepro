@@ -1,0 +1,14 @@
+apiVersion: v2
+name: casepro
+description: CasePro is a case management dashboard for UNICEF and partner organizations
+type: application
+version: 0.1.0
+appVersion: "1.4.3"
+keywords:
+  - casepro
+maintainers:
+  - email: techops@ona.io
+    name: Ona
+sources:
+  - https://github.com/onaio/casepro-docker
+  - https://github.com/rapidpro/casepro

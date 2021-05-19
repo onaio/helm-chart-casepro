@@ -1,0 +1,196 @@
+# Default values for casepro.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: onaio/casepro
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+web:
+  replicaCount: 1
+
+  command:
+    - /bin/bash
+    - '-c'
+    - >-
+      uwsgi --http :3031 --uid casepro --gid casepro --chdir /casepro
+      --module casepro.wsgi:application --master --processes 3
+      --pidfile /casepro/casepro.pid --vacuum --harakiri 240
+      --max-requests 5000 --static-map /static=/casepro/sitestatic
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    enabled: false
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: casepro.local
+        paths:
+        - path: /
+          backend:
+            serviceName: casepro.local
+            servicePort: 80
+    tls: []
+    #  - secretName: casepro-tls
+    #    hosts:
+    #      - casepro.local
+
+  resources: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  livenessProbe:
+    httpGet:
+      path: /ping
+      port: http
+    initialDelaySeconds: 80
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 2
+
+  readinessProbe:
+    httpGet:
+      path: /ping
+      port: http
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 2
+
+  containerPort: 3031
+
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
+    # maxUnavailable:
+
+celeryBeat:
+  replicaCount: 1
+
+  command:
+    - /bin/bash
+    - '-c'
+    - >-
+      celery beat -A casepro.celery:app --workdir=/casepro --loglevel=INFO
+      --schedule=/casepro/celerybeat-schedule
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  resources: {}
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+celeryWorker:
+  replicaCount: 1
+
+  command:
+    - /bin/bash
+    - '-c'
+    - >-
+      celery multi start casepro.celery casepro.sync -A casepro.celery:app
+      --loglevel=INFO --logfile=/casepro/celeryworker.log
+      --pidfile=/casepro/celeryw-%n.pid -Q:casepro.celery celery
+      -Q:casepro.sync sync && tail -f /casepro/celeryworker.log
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  resources: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 90
+    # targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  livenessProbe:
+    exec:
+      command:
+        - /bin/bash
+        - '-c'
+        - >-
+          celery inspect ping -A casepro.celery:app -d casepro.celery@$HOSTNAME &&
+          celery inspect ping -A casepro.celery:app -d casepro.sync@$HOSTNAME
+    initialDelaySeconds: 30
+    periodSeconds: 60
+    timeoutSeconds: 10
+
+  readinessProbe:
+    exec:
+      command:
+        - /bin/bash
+        - '-c'
+        - >-
+          celery inspect ping -A casepro.celery:app -d casepro.celery@$HOSTNAME &&
+          celery inspect ping -A casepro.celery:app -d casepro.sync@$HOSTNAME
+    initialDelaySeconds: 30
+    periodSeconds: 60
+    timeoutSeconds: 10
+
+collectstaticJob:
+  enabled: false
+
+migrateJob:
+  enabled: false
+
+compressJob:
+  enabled: false
+
+envVariables:
+  DJANGO_SETTINGS_MODULE: casepro.settings
+
+secretEnvVariables: {}
