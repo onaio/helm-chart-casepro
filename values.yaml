@@ -42,6 +42,7 @@ web:
   service:
     type: ClusterIP
     port: 80
+    targetPort: 8000
 
   ingress:
     enabled: false
@@ -53,8 +54,8 @@ web:
         paths:
         - path: /
           backend:
-            serviceName: casepro.local
-            servicePort: 80
+            serviceName: casepro-web
+            servicePort: 8000
     tls: []
     #  - secretName: casepro-tls
     #    hosts:
@@ -99,6 +100,32 @@ web:
     enabled: false
     minAvailable: 1
     # maxUnavailable:
+
+nginxSidecar:
+  image:
+    repository: nginx
+    pullPolicy: Always
+    tag: stable
+
+  securityContext: {}
+
+  containerPort: 8000
+
+  livenessProbe:
+    httpGet:
+      path: /nghealth
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 3
+
+  readinessProbe:
+    httpGet:
+      path: /nghealth
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 3
+
+  resources: {}
 
 celeryBeat:
   replicaCount: 1

@@ -29,8 +29,16 @@ spec:
       serviceAccountName: {{ include "casepro.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.web.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: {{ include "casepro.fullname" . }}-nginx-web
+        - name: staticfiles
+          emptyDir: {}
+        - name: mediafiles
+          emptyDir: {}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: {{ .Chart.Name }}-web
           securityContext:
             {{- toYaml .Values.web.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -39,6 +47,13 @@ spec:
             - name: http
               containerPort: {{ .Values.web.containerPort }}
               protocol: TCP
+          volumeMounts:
+            - name: staticfiles
+              mountPath: /casepro/sitestatic
+              readOnly: false
+            - name: mediafiles
+              mountPath: /casepro/media
+              readOnly: false
           {{- with .Values.web.command }}
           command:
             {{- toYaml . | nindent 12 }}
@@ -54,6 +69,31 @@ spec:
             {{- toYaml .Values.web.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.web.resources | nindent 12 }}
+        - name: {{ .Chart.Name }}-nginx-sidecar
+          image: "{{ .Values.nginxSidecar.image.repository }}:{{ .Values.nginxSidecar.image.tag }}"
+          imagePullPolicy: {{ .Values.nginxSidecar.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.nginxSidecar.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.nginxSidecar.containerPort }}
+              protocol: TCP
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+            - name: staticfiles
+              mountPath: /www/sitestatic/
+              readOnly: true
+            - name: mediafiles
+              mountPath: /www/media/
+              readOnly: true
+          livenessProbe:
+            {{- toYaml .Values.nginxSidecar.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.nginxSidecar.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.nginxSidecar.resources | nindent 12 }}
       {{- with .Values.web.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

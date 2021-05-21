@@ -2,7 +2,7 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "casepro.fullname" . }}
+  name: {{ include "casepro.fullname" . }}-web
   labels:
     {{- include "casepro.labels" . | nindent 4 }}
 spec:

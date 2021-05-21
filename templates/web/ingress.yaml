@@ -1,14 +1,12 @@
 {{- if .Values.web.ingress.enabled -}}
-{{- $fullName := include "casepro.fullname" . -}}
-{{- $svcPort := .Values.web.service.port -}}
 {{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 {{- else -}}
 apiVersion: extensions/v1beta1
 {{- end }}
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "casepro.fullname" . }}-web
   labels:
     {{- include "casepro.labels" . | nindent 4 }}
   {{- with .Values.web.ingress.annotations }}
@@ -33,9 +31,12 @@ spec:
         paths:
           {{- range .paths }}
           - path: {{ .path }}
+            pathType: Prefix
             backend:
-              serviceName: {{ $fullName }}-web
-              servicePort: {{ $svcPort }}
+              service:
+                name: {{ .backend.serviceName }}
+                port:
+                  number: {{ .backend.servicePort }}
           {{- end }}
     {{- end }}
   {{- end }}
