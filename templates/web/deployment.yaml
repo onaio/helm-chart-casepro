@@ -37,6 +37,26 @@ spec:
           emptyDir: {}
         - name: mediafiles
           emptyDir: {}
+      initContainers:
+        {{- if .Values.web.initContainer.enabled }}
+        - name: {{ include "casepro.fullname" . }}-collecstatic-compress
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command:
+            - /bin/bash
+            - '-c'
+            - >-
+              python manage.py collectstatic --noinput &&
+              python manage.py compress --extension haml,html --force
+          envFrom:
+            - configMapRef:
+                name: {{ include "casepro.fullname" . }}
+            - secretRef:
+                name: {{ include "casepro.fullname" . }}
+          volumeMounts:
+            - name: staticfiles
+              mountPath: /casepro/sitestatic
+              readOnly: false
+        {{- end }}
       containers:
         - name: {{ .Chart.Name }}-web
           securityContext:

@@ -24,6 +24,9 @@ serviceAccount:
 web:
   replicaCount: 1
 
+  initContainer:
+    enabled: true
+
   command:
     - /bin/bash
     - '-c'
@@ -208,13 +211,7 @@ celeryWorker:
     periodSeconds: 60
     timeoutSeconds: 10
 
-collectstaticJob:
-  enabled: false
-
 migrateJob:
-  enabled: false
-
-compressJob:
   enabled: false
 
 envVariables:
