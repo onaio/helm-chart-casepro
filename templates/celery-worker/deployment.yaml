@@ -13,6 +13,9 @@ spec:
     matchLabels:
       {{- include "casepro.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: celery-worker
+      {{- with .Values.extraSelectorLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -26,6 +29,9 @@ spec:
       labels:
         {{- include "casepro.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: celery-worker
+        {{- with .Values.extraSelectorLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

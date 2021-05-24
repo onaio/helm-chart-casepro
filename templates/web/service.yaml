@@ -14,3 +14,6 @@ spec:
   selector:
     {{- include "casepro.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: web
+    {{- with .Values.extraSelectorLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}

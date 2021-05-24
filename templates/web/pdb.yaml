@@ -20,4 +20,7 @@ spec:
     matchLabels:
       {{- include "casepro.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: web
+      {{- with .Values.extraSelectorLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
 {{- end }}
