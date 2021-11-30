@@ -33,6 +33,8 @@ spec:
                 name: {{ include "casepro.fullname" . }}
             - secretRef:
                 name: {{ include "casepro.fullname" . }}
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
       restartPolicy: Never
   backoffLimit: 0
 {{- end }}
