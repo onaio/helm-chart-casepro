@@ -62,6 +62,8 @@ spec:
             - name: staticfiles
               mountPath: /casepro/sitestatic
               readOnly: false
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
         {{- end }}
       containers:
         - name: {{ .Chart.Name }}-web
