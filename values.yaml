@@ -54,10 +54,14 @@ web:
     annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
+
+    # ingressClassName
+    # className: ""
     hosts:
       - host: casepro.local
         paths:
         - path: /
+          pathType: Prefix
           backend:
             serviceName: casepro-web
             servicePort: 8000
